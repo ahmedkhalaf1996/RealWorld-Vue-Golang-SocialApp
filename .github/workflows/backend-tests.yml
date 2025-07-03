@@ -56,7 +56,7 @@ jobs:
         echo "MongoDB is Ready!"
     
     - name : Run Go Tests 
-      run: Go test ./tests/... -v 
+      run: go test ./tests/... -v 
       working-directory: ./backend/api
       env:
         TEST_MONGO_URI: mongodb://localhost:27017
