@@ -59,4 +59,4 @@ jobs:
       run: Go test ./tests/... -v 
       working-directory: ./backend/api
       env:
-        TEST_MONGO_URI:mongodb://localhost:27017
+        TEST_MONGO_URI: mongodb://localhost:27017
