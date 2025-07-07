@@ -26,7 +26,7 @@ jobs:
         uses: ./.github/actions/setup-backend
 
       - name: Setup Frontend Environment
-        uses: ./.github/actions/setup-frotend      
+        uses: ./.github/actions/setup-frontend     
 
 
       - name: Wait For MongoDb To be ready
