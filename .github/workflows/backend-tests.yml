@@ -1,12 +1,8 @@
 name: Backend Tests
 
 on:
-  push:
-    branches: [main, auto-testing]
-  pull_request:
-    branches: [main, auto-testing]
-
-
+  workflow_call:
+  
 jobs:
   backend-tests:
     name: Backend Go Tests 

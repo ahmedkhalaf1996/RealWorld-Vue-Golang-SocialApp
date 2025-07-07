@@ -98,7 +98,7 @@
     async mounted(){
     this.SetData();
     // getnot number
-        this.NotifyList = await this.GetUnReadedNotifyNum(this.GetUserData().result._id)
+        this.NotifyList = await this.GetUnReadedNotifyNum(this.GetUserData()?.result._id)
         let numofunreadednot = 0;
         this.NotifyList.forEach(el =>{
              if (! el.isreded ) {
@@ -107,7 +107,7 @@
             })
         this.notificationNum = numofunreadednot;
     // get chat messages numbers
-    const  {total} = await this.GetUnreadedMessageNum(this.GetUserData().result._id)
+    const  {total} = await this.GetUnreadedMessageNum(this.GetUserData()?.result._id)
     this.unReadedMessages = total;
   },
   }

@@ -1,0 +1,26 @@
+name: 'Setup Frontend Environment'
+description: 'Sets up Node env and install frontend dependeceis'
+
+runs:
+  using: 'composite'
+  setps:
+    - name: Set up Node 
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.18.0'
+        cache: 'npm'
+        cache-dependency-path: './frontend/package-lock.json'
+    - name: Install Node dependeceis
+      run: npm ci 
+      working-directory : ./frontend
+      shell: bash 
+    
+    - name: Build Vue App
+      run: npm run build 
+      working-directory: ./frontend
+      shell: bash
+
+
+
+
+
