@@ -3,7 +3,7 @@ description: 'Sets up Node env and install frontend dependeceis'
 
 runs:
   using: 'composite'
-  setps:
+  steps:
     - name: Set up Node 
       uses: actions/setup-node@v4
       with:
