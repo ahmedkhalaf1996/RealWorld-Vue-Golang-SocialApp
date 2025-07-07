@@ -5,7 +5,7 @@ on:
 
 jobs:
   integration-tests:
-    name: Forntend Integration Tests (with Backend)
+    name: Frontned Integration Tests (with Backend)
     runs-on: ubuntu-latest
 
     services:
@@ -62,7 +62,7 @@ jobs:
       # Start Frontend In background 
       - name: Start Fronend in background
         run: |
-          echo "Starting Forntend appication on port 80.."
+          echo "Starting Frontend appication on port 80.."
           sudo nohup npm run serve > frotend.log 2>&1 &
           echo $! > frontend.pid 
           sleep 15
@@ -71,7 +71,7 @@ jobs:
             echo "Vue clid services is running"
           else 
             echo "vue cli service not found, checking logs:"
-            sudo cat forntend.log || echo "No log file found"
+            sudo cat frontend.log || echo "No log file found"
           fi 
         working-directory: ./frontend 
         env:
@@ -85,11 +85,11 @@ jobs:
           echo "backend port is open , for  testing http response..."
           timeout 30 bash -c 'until curl -f http://localhost:80 2>/dev/null; do echo "Waiting for http respose .."; sleep 2; done'
           echo "frontend application is ready!"  
-        working-directory: ./forntend   
+        working-directory: ./frontend   
 
       - name: Run Cypress Integration Tests 
         run: npm run cy:run:auth 
-        working-directory: ./forntend 
+        working-directory: ./frontend 
         env:
           CYPRESS_BASE_URL: http://localhost:80
           CYPRESS_API_URL: http://localhost:5000
