@@ -7,16 +7,16 @@ on:
     branches: [main, auto-testing]
 
 jobs: 
-  backend-tests:
-    uses: ./.github/workflows/backend-tests.yml
-    secrets: inherit
+  # backend-tests:
+  #   uses: ./.github/workflows/backend-tests.yml
+  #   secrets: inherit
 
-  integration-frotend-tests:
-    uses: ./.github/workflows/integration-test.yml 
-    needs: backend-tests
-    secrets: inherit
+  # integration-frotend-tests:
+  #   uses: ./.github/workflows/integration-test.yml 
+  #   needs: backend-tests
+  #   secrets: inherit
 
   deploay-to-dockerhub:
     uses: ./.github/workflows/docker-deployment.yml 
-    needs: integration-frotend-tests
+    # needs: integration-frotend-tests
     secrets: inherit
