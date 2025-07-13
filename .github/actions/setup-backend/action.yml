@@ -1,0 +1,31 @@
+name: 'Setup Backend Environment'
+description: 'Sets up Go env and install Backend dependeceis'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Go 
+      uses: actions/setup-go@v4 
+      with:
+        go-version: '1.22.2'
+
+    - name: Cach Go Modules
+      uses: actions/cache@v3
+      with:
+        path: ~/go/pkg/mod 
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Install Dependencies
+      run: |
+        go mod tidy
+        go mod download
+      working-directory: ./backend/api
+      shell: bash 
+
+    - name: Install test Dependencies
+      run: go get -t ./tests/...
+      working-directory: ./backend/api
+      shell: bash 
+

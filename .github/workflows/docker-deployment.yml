@@ -1,0 +1,32 @@
+name: Deploy Images To Docker Hub
+
+on: 
+  workflow_call:
+
+env:
+  DOCKER_REPO_BACK_API: "go-app-api"
+  DOCKER_REPO_FRONT: "vue-app-fe"
+  DOCKER_TAG: "latest"
+jobs:
+  deploay-to-dockerhub:
+    name: deploay to docker hub
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3 
+    - name: docker login
+      env:
+        DOCKER_USER: ${{ secrets.DOCKER_USER }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      run: |
+        docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+    
+    - name: Build backend golang api 
+      run: docker build . --file backend/api/Dockerfile --tag ${{secrets.DOCKER_USER}}/$DOCKER_REPO_BACK_API:$DOCKER_TAG
+    - name: Push backend api image to docker hub 
+      run: docker push ${{secrets.DOCKER_USER}}/$DOCKER_REPO_BACK_API:$DOCKER_TAG
+
+
+    - name: Build frontend vue 
+      run: docker build . --file frontend/Dockerfile --tag ${{secrets.DOCKER_USER}}/$DOCKER_REPO_FRONT:$DOCKER_TAG
+    - name: Push frontend vue image to docker hub 
+      run: docker push ${{secrets.DOCKER_USER}}/$DOCKER_REPO_FRONT:$DOCKER_TAG

@@ -1,4 +1,4 @@
-.PHONY: clear-swag swag-init
+.PHONY: clear-swag swag-init test
 
 clear-swag:
 	@echo "clearing docs dirrectory.." 
@@ -7,3 +7,7 @@ clear-swag:
 swag-init: clear-swag
 	@echo "Generate swagger docs.."
 	swag init -g main.go
+
+# run all tests
+test:
+	go test ./tests/... -v
