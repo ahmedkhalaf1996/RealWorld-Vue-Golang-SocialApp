@@ -1,0 +1,50 @@
+version: '3'
+services:
+  GolangApiServer:
+    image: ahmedkhalaf666/go-app-api
+    container_name: GolangApiServer 
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    networks:
+      - app-network
+    depends_on:
+      - mongodb
+  VueServer:
+    image: ahmedkhalaf666/vue-app-fe
+    container_name: VueServer
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    networks:
+      - app-network    
+    volumes:
+      - dist:/dist 
+    depends_on:
+      - GolangApiServer
+
+  mongodb:
+    container_name: mongodb
+    image: mongo:7.0 
+    ports:
+      - 27017:27017 
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password 
+    volumes:
+     - mongo-data:/usr/data/db 
+    networks:
+      - app-network
+
+
+volumes:
+  dist:
+    driver: local 
+  mongo-data:
+    driver:  local
+
+networks:
+  app-network:
+    driver: bridge
+
+
