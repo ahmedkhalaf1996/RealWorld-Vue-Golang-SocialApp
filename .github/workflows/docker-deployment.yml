@@ -4,8 +4,8 @@ on:
   workflow_call:
 
 env:
-  DOCKER_REPO_BACK_API: "ahmedkhalaf666/go-app-api"
-  DOCKER_REPO_FRONT: "ahmedkhalaf666/vue-app-fe"
+  DOCKER_REPO_BACK_API: "go-app-api"
+  DOCKER_REPO_FRONT: "vue-app-fe"
   DOCKER_TAG: "latest"
 jobs:
   deploay-to-dockerhub:
