@@ -3,7 +3,10 @@ package main
 import (
 	"Server/database"
 	"Server/routes"
+	"Server/servergrpc"
+	"net"
 
+	pb "Server/protos"
 	"log"
 
 	_ "Server/docs"
@@ -12,6 +15,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/swagger"
 	"github.com/joho/godotenv"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 // @title Fiber Golang Mongo Grpc Websocet etc..
@@ -40,6 +45,23 @@ func main() {
 			return true
 		},
 	}))
+
+	// Setup Grpc Server
+	lis, err := net.Listen("tcp", ":5001")
+	if err != nil {
+		log.Fatalf("faild to listen : %v", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	pb.RegisterRealtimeChatServiceServer(grpcServer, &servergrpc.Server{})
+	reflection.Register(grpcServer)
+	log.Println("gRPC Server Runing on Port 5001")
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("faild to server : %v", err)
+		}
+	}()
+	// end of setup gRPC server
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Welcome to Socail app")
