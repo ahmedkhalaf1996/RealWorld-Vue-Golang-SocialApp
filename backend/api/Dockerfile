@@ -1,4 +1,4 @@
-FROM golang:1.22.2 AS builder 
+FROM golang:1.23.0 AS builder 
 WORKDIR /usr/src/app 
 COPY backend/api/go.mod ./
 COPY backend/api/go.sum ./

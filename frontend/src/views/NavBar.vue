@@ -60,7 +60,7 @@
 </template>
   
   <script>
-  import { mapGetters, mapMutations, mapActions } from 'vuex';
+  import { mapGetters, mapMutations, mapActions, mapState } from 'vuex';
   export default {
     name: 'NavBar',
     data (){
@@ -71,11 +71,23 @@
         }
     },
     computed: {
-      ...mapGetters(['GetUserData'])
+      ...mapGetters(['GetUserData']),
+      ...mapState(['RealTimeNotify'])
     },
+    watch:{
+      "RealTimeNotify.notifyideslistNumber": async function () {
+        this.UNreadedNotifyCount();
+      },
+      $route: async function () {
+        this.UNreadedNotifyCount();
+      }
+    },
+
     methods: {
       ...mapMutations(['SetData']),
-      ...mapActions(['logout','GetUnReadedNotifyNum', 'GetUnreadedMessageNum']),
+      ...mapActions(['logout','GetUnReadedNotifyNum', 'GetUnreadedMessageNum', 
+        'StopConnectionToNotify'
+      ]),
       GoSearch(e) {
             console.log("go", e.target.value)
             this.$router.push({path: `/Search`, query: { search: e.target.value }})
@@ -86,6 +98,7 @@
       },
       LogUserOut(){
         this.logout(),
+        this.StopConnectionToNotify()
         this.$router.push(`/Auth`)
       },
       GoToNotification(){
@@ -93,12 +106,9 @@
       },
       GoToChat(){
         this.$router.push('/Chat')
-      }
-    },
-    async mounted(){
-    this.SetData();
-    // getnot number
-        this.NotifyList = await this.GetUnReadedNotifyNum(this.GetUserData()?.result._id)
+      },
+      async UNreadedNotifyCount(){
+                this.NotifyList = await this.GetUnReadedNotifyNum(this.GetUserData()?.result._id)
         let numofunreadednot = 0;
         this.NotifyList.forEach(el =>{
              if (! el.isreded ) {
@@ -106,6 +116,12 @@
              }
             })
         this.notificationNum = numofunreadednot;
+      }
+    },
+    async mounted(){
+    this.SetData();
+    // getnot number
+    await this.UNreadedNotifyCount();
     // get chat messages numbers
     const  {total} = await this.GetUnreadedMessageNum(this.GetUserData()?.result._id)
     this.unReadedMessages = total;

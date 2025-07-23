@@ -94,7 +94,11 @@ export default {
     }
   },
   methods:{
-    ...mapActions(['signin', 'signup']),
+    ...mapActions([
+        'signin', 
+        'signup',
+        'connectToNotify',
+    ]),
     async Login(){
         console.log("login in data", this.Sin_data)
         var validate = true 
@@ -133,6 +137,7 @@ export default {
                 type:'positive',
                 message:`Successfully Sigin in`
            })  
+           this.connectToNotify()
            this.$router.push('/')
           }
         }
@@ -170,6 +175,7 @@ export default {
                 type:'positive',
                 message:`Successfully Sigin up`
            })  
+        this.connectToNotify()
         //    this.$router.push('/')
           }
         }
