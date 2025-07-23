@@ -10,14 +10,24 @@
 
 <script>
 import NavBar from "@/views/NavBar.vue";
-import { mapMutations } from "vuex";
+import { mapActions, mapMutations } from "vuex";
 export default {
   name: "MainLayout",
   methods:{
-    ...mapMutations(['SetData'])
+    ...mapMutations([
+      'SetData'
+    ]),
+    ...mapActions([
+            'connectToNotify',
+      'StopConnectionToNotify'  
+    ])
   },
   mounted(){
     this.SetData();
+    this.connectToNotify();
+  },
+  beforeUnmount(){
+    this.StopConnectionToNotify();
   },
   components:{NavBar}
 }

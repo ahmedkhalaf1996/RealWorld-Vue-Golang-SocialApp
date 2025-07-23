@@ -131,7 +131,7 @@ export default {
             this.LikePostByUser( this.localPost._id);
             const uid = this.GetUserData().result._id;
             if(this.UserLike){
-                 this.localPost.likes =  this.localPost.likes.fillter(id => id != uid)
+                 this.localPost.likes =  this.localPost.likes.filter(id => id != uid)
            } else {
              this.localPost.likes.push(uid)
            }
