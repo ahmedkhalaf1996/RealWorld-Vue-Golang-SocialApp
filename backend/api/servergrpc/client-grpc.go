@@ -18,7 +18,9 @@ type Client struct {
 }
 
 func NewClient() (*Client, error) {
-	conn, err := grpc.NewClient(":8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// conn, err := grpc.NewClient(":8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// DevOps docker Compose usage
+	conn, err := grpc.NewClient("GolangNotifyService:8090", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}

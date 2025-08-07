@@ -24,7 +24,7 @@
                                 <q-item-label>{{ contact.name }}</q-item-label>
                              </q-item-section>
                             
-                            <q-item-section side  >
+                            <q-item-section side  v-if="contact.isOnline">
                                 <q-badge color="positive" rounded/>
                              </q-item-section>  
 
@@ -79,7 +79,7 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex';
+import { mapGetters, mapActions, mapState } from 'vuex';
 export default {
     name:'ChatComponent',
     data(){
@@ -94,19 +94,58 @@ export default {
         };
     },
     computed:{
-        ...mapGetters(['GetUserFollowersFollowing','GetUserData'])
+        ...mapGetters(['GetUserFollowersFollowing','GetUserData']),
+        ...mapState(["RealTimeChat"])
+    },
+    watch: {
+        "RealTimeChat.onlineFriends": function (online) {
+            const onlineFriendsArray = Object.values(online);
+            console.log('Online friend changed new val', onlineFriendsArray)
+                this.uniqueOnlineUsers = Array.from(new Set(onlineFriendsArray));
+                this.updateOnlineList();
+        },
+        "RealTimeChat.privateMessages": function(message){
+            if(this.contacts.length > 0){
+                this.contacts.forEach((contact)=> {
+                    if(contact._id == message.sender) {
+                        contact.unReadedmessage++;
+                    }
+                })
+            if(this.selectedUser && this.selectedUser?._id == message.sender){
+                this.messageBetweenUsers.push(message);
+                setTimeout(() => {
+                    this.scrollDownFunction();
+                }, 100);
+            }
+
+            }
+        }
     },
     async mounted(){
         this.MainUserData = this.GetUserData().result;
         this.GetUsList();
+
+        this.uniqueOnlineUsers = Array.from(new Set(Object.values(this.RealTimeChat.onlineFriends)));
+        this.updateOnlineList();
+
     },
     methods:{
         ...mapActions([
             'GetUnreadedMessageNum',
             'GetChatMsgsBetweenTwoUsers',
             'SendMessage',
-            'MarkMsgsAsReaded'
+            'MarkMsgsAsReaded',
+            'SendPrivateMessage'
         ]),
+        updateOnlineList(){
+            this.contacts.forEach((contact)=> {
+                if(this.uniqueOnlineUsers.includes(contact._id)) {
+                    contact.isOnline = true;
+                } else {
+                    contact.isOnline = false;
+                }
+            })
+        },
         handleScroll(){
             const container = this.$refs.messageContainer;
             if (container.scrollTop === 0){
@@ -170,6 +209,8 @@ export default {
             if(this.contacts){
                 this.GetUnreadedMsgList();
             }
+            this.updateOnlineList();
+
         },
         async selectUser(user){
             this.selectedUser = null;
@@ -195,14 +236,25 @@ export default {
             var recever = this.selectedUser._id;
 
             var sdata = {content, sender, recever};
-
-            var sucess = this.SendMessage(sdata);
-            if (sucess){
-                this.messageBetweenUsers.push(sdata);
+            if(!this.uniqueOnlineUsers.includes(recever)) {
+                
+                var sucess = this.SendMessage(sdata);
+                if (sucess){
+                    this.messageBetweenUsers.push(sdata);
+                    setTimeout(() => {
+                        this.scrollDownFunction();
+                    }, 100);
+                }
+            } else {
+                this.SendPrivateMessage(sdata).then(()=> {
+                    this.messageBetweenUsers.push(sdata);
+                });
                 setTimeout(() => {
-                    this.scrollDownFunction();
+                        this.scrollDownFunction();
                 }, 100);
             }
+
+
             this.messaageToSend.text = '';
         }
  

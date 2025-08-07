@@ -10,6 +10,30 @@ services:
       - app-network
     depends_on:
       - mongodb
+  GolangChatService:
+    image: ahmedkhalaf666/go-app-chat
+    container_name: GolangChatService 
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    networks:
+      - app-network
+    depends_on:
+      - mongodb
+      - GolangApiServer
+
+  GolangNotifyService:
+    image: ahmedkhalaf666/go-app-notify
+    container_name: GolangNotifyService 
+    restart: unless-stopped
+    ports:
+      - "8088:8088"
+      - "8090:8090"
+    networks:
+      - app-network
+    depends_on:
+      - mongodb
+      - GolangApiServer
   VueServer:
     image: ahmedkhalaf666/vue-app-fe
     container_name: VueServer
@@ -22,6 +46,8 @@ services:
       - dist:/dist 
     depends_on:
       - GolangApiServer
+      - GolangChatService
+      - GolangNotifyService
 
   mongodb:
     container_name: mongodb
