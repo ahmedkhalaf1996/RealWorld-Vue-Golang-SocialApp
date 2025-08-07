@@ -39,8 +39,10 @@ const RealTimeNotify = {
 
         async StopConnectionToNotify(context){
             try {
-               context.ws.disconnect()
+                if (context.state.ws){
+                context.state.ws.close()
                 context.commit('SET_WS', null);
+                }
             } catch (error) {
                 console.log("error", error)          
             }

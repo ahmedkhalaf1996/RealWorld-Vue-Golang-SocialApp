@@ -5,6 +5,7 @@ import Posts from './Posts'
 import NotificationStore from './Notification'
 import Chat from './Chat'
 import RealTimeNotify from './RealTimeNotify'
+import RealTimeChat from './RealTimeChat'
 export default createStore({
 
   modules: {
@@ -13,6 +14,7 @@ export default createStore({
     Posts,
     NotificationStore,
     Chat,
-    RealTimeNotify
+    RealTimeNotify,
+    RealTimeChat
   }
 })

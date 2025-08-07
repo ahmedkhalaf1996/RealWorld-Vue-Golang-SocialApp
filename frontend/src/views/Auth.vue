@@ -98,6 +98,7 @@ export default {
         'signin', 
         'signup',
         'connectToNotify',
+        'createChatConnection'
     ]),
     async Login(){
         console.log("login in data", this.Sin_data)
@@ -138,6 +139,7 @@ export default {
                 message:`Successfully Sigin in`
            })  
            this.connectToNotify()
+           this.createChatConnection()
            this.$router.push('/')
           }
         }
@@ -176,6 +178,8 @@ export default {
                 message:`Successfully Sigin up`
            })  
         this.connectToNotify()
+        this.createChatConnection()
+
         //    this.$router.push('/')
           }
         }
