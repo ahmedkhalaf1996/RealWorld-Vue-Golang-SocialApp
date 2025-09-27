@@ -16,9 +16,9 @@ func Connect() {
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 
 	// evn
-	// mongoUri := "mongodb://localhost:27017"
+	mongoUri := "mongodb://localhost:27017"
 	// devOps
-	mongoUri := "mongodb://admin:password@mongodb"
+	// mongoUri := "mongodb://admin:password@mongodb"
 	Client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoUri))
 
 	if err == nil {

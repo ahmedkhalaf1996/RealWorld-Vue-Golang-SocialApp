@@ -107,8 +107,8 @@ func GetMsgsByNums(c *fiber.Ctx) error {
 	// pagenation options
 	options := options.Find()
 	options.SetSort(bson.D{{Key: "_id", Value: -1}})
-	options.SetSkip(int64(from * 2))
-	options.SetLimit(2)
+	options.SetSkip(int64(from * 8))
+	options.SetLimit(8)
 
 	// query the db
 	cursor, err := MessageSchema.Find(ctx, filter, options)
