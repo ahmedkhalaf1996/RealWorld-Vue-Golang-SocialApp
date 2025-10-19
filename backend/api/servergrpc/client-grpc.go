@@ -59,26 +59,26 @@ func (c *Client) SendGrpcNotification(ctx context.Context, xId, details, mainUID
 }
 
 func SendNotification(notification models.Notification) error {
-	client, err := NewClient()
-	if err != nil {
-		log.Printf("Faild to create grpc client %v", err)
-		return err
-	}
-	defer client.Close()
+	// client, err := NewClient()
+	// if err != nil {
+	// 	log.Printf("Faild to create grpc client %v", err)
+	// 	return err
+	// }
+	// defer client.Close()
 
-	ctx := context.Background()
-	err = client.SendGrpcNotification(ctx,
-		notification.ID.Hex(),
-		notification.Deatils,
-		notification.MainUID,
-		notification.TargetID,
-		notification.IsReaded,
-		notification.CreatedAt,
-		notification.User.Name,
-		notification.User.Avatart)
-	if err != nil {
-		log.Printf("Faild to send notification : %v", err)
-		return err
-	}
+	// ctx := context.Background()
+	// err = client.SendGrpcNotification(ctx,
+	// 	notification.ID.Hex(),
+	// 	notification.Deatils,
+	// 	notification.MainUID,
+	// 	notification.TargetID,
+	// 	notification.IsReaded,
+	// 	notification.CreatedAt,
+	// 	notification.User.Name,
+	// 	notification.User.Avatart)
+	// if err != nil {
+	// 	log.Printf("Faild to send notification : %v", err)
+	// 	return err
+	// }
 	return nil
 }

@@ -1,8 +1,8 @@
 <template>
     <q-page class="constrain q-pa-md">
         <div class="row q-col-gutter-lg">
-            <div class="col-2"></div>
-            <div class="col-8 text-center">
+            <div class="col-2 col-xs-none"></div>
+            <div class="col-8 col-xs-12 text-center">
                 <div class="q-pa-md">
                     <q-btn-toggle v-model="model"
                         toggle-color="primary"
@@ -56,7 +56,7 @@
                 </div>
 
             </div>
-            <div class="col-2"></div>
+            <div class="col-2  col-xs-none"></div>
         </div>
     </q-page>
     

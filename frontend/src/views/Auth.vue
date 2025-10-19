@@ -1,6 +1,22 @@
 <template>
  <q-page class="constrain q-pa-md">
-    <div class="row q-col-gutter-lg">
+    <!-- mobile toggle tabs only visible on mobile  -->
+     <div class="mobile-tabs q-mb-md gt-xs-hide">
+        <q-tabs 
+         v-model="activeTab"
+         dense
+         class="text-grey"
+         active-color="primary"
+         indicator-color="primary"
+         align="justify"
+         narrow-indicator
+         >
+        <q-tab name="signin" label="Sign In" />
+        <q-tab name="signup" label="Sign Up" />
+        
+        </q-tabs>
+     </div>
+    <div class="row q-col-gutter-lg lt-sm-hide">
         <div class="col-5">
             <q-card class="my-card" style="width: 100%; padding: 10px;">
                 <h1 class="text-h6 text-center">Signin</h1>
@@ -70,6 +86,116 @@
             </q-card>
         </div>
     </div>
+
+    <div class="mobile-layout gt-xs-hide">
+        <!-- signin tab  -->
+         <q-card v-show="activeTab === 'signin'" class="mobile-card">
+            <q-card-section class="text-center q-pb-none">
+                <div class="text-h5 q-mbxs"> Welcome back</div>
+                <div class="text-grey-6">Sign in to your account</div>
+            </q-card-section>
+            <q-card-section class="q-pt-none">
+                <form @submit.prevent.stop="Login" class="q-gutter-md q-mt-md">
+                    <q-input
+                    filled
+                    v-model="Sin_data.email"
+                    label="Email Address"
+                    type="email"
+                    lazy-rules
+                    :rules="[val => !!val || 'Email is Required']"
+                    class="mobile-input"
+                    />
+
+                    <q-input
+                    filled
+                    v-model="Sin_data.password"
+                    label="Password"
+                    type="password"
+                    lazy-rules
+                    :rules="[val => !!val || 'Paaword is Required']"
+                    class="mobile-input"
+                    />
+                    <div class="q-mt-lg">
+                        <q-btn
+                        label="Sign In"
+                        type="submit"
+                        color="primary"
+                        class="full-width mobile-btn"
+                        :loading="isLoading"
+                        size="md"
+                        rounded
+                        />
+                    </div>
+                </form>
+            </q-card-section>
+         </q-card>
+
+         <!-- Sign Up Tab  -->
+         <q-card v-show="activeTab === 'signup'" class="mobile-card">
+            <q-card-section class="text-center q-pb-none">
+                <div class="text-h5 q-mbxs">Join Us</div>
+                <div class="text-grey-6">Create your new account</div>
+            </q-card-section>
+            <q-card-section class="q-pt-none">
+
+            </q-card-section>
+             <form @submit.prevent.stop="Register" class="q-gutter-md q-mt-md">
+                <div class="row q-col-gutter-sm">
+                 <div class="col-6">
+                  <q-input
+                  filled
+                  v-model="Sup_data.firstName"
+                  label="First Name"
+                  lazy-rules
+                  :rules="[val => !!val || 'First aname is required' ]"
+                  class="mobile-input"
+                  />
+                 </div>
+                <div class="col-6">
+                <q-input
+                  filled
+                  v-model="Sup_data.lastName"
+                  label="Last Name"
+                  lazy-rules
+                  :rules="[val => !!val || 'Last aname is required' ]"
+                  class="mobile-input"
+                  />
+                 </div>
+                </div>
+
+                    <q-input
+                    filled
+                    v-model="Sup_data.email"
+                    label="Email Address"
+                    type="email"
+                    lazy-rules
+                    :rules="[val => !!val || 'Email is Required']"
+                    class="mobile-input"
+                    />
+
+                    <q-input
+                    filled
+                    v-model="Sup_data.password"
+                    label="Password"
+                    type="password"
+                    lazy-rules
+                    :rules="[val => !!val || 'Paaword is Required']"
+                    class="mobile-input"
+                    />
+                    <div class="q-mt-lg">
+                        <q-btn
+                        label="Create Account"
+                        type="submit"
+                        color="primary"
+                        class="full-width mobile-btn"
+                        :loading="isLoading"
+                        size="md"
+                        rounded
+                        />
+                    </div>
+                </form>
+            </q-card>
+    </div>
  </q-page>
 </template>
   
@@ -81,6 +207,8 @@ export default {
   name: 'AuthView',
   data () {
     return {
+        activeTab: 'signin',
+        isLoading: false,
         Sin_data:{
             email:'',
             password: '',
@@ -102,6 +230,7 @@ export default {
     ]),
     async Login(){
         console.log("login in data", this.Sin_data)
+        this.isLoading = true;
         var validate = true 
         if (this.Sin_data.email == ''){
             validate = false 
@@ -144,11 +273,14 @@ export default {
           }
         }
 
+        this.isLoading = false;
+
     },
     async Register(){
         console.log("Register in data", this.Sup_data)
         // validation
         var isVaidate = true;
+        this.isLoading = true;
         for (const key in this.Sup_data){
             const val = this.Sup_data[key];
             if(val === ''){
@@ -183,7 +315,55 @@ export default {
         //    this.$router.push('/')
           }
         }
+        this.isLoading = false;
     },
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.mobile-card {
+    border-radius: 16px;
+    box-shadow: 0 4px 20 rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.mobile-input {
+    .q-field__control {
+        border-radius: 12px;
+    }
+}
+
+.mobile-btn {
+    height: 48px;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0.5px;
+}
+
+.my-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 599px) {
+    .constrain {
+        padding: 16px 8px !important;
+    }
+}
+
+.gt-xs-hide {
+    @media (min-width: 600px) {
+        display: none !important;
+    }
+}
+
+
+.lt-sm-hide {
+    @media (max-width: 600px) {
+        display: none !important;
+    }
+}
+
+</style>
