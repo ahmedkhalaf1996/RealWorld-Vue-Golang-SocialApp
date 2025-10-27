@@ -1,10 +1,8 @@
 name: CI/CD Pipeline
 
 on:
-  push:
-    branches: [main, auto-testing]
   pull_request:
-    branches: [main, auto-testing]
+    branches: [main]
 
 jobs: 
   backend-tests:
