@@ -1,7 +1,7 @@
 <template>
    <q-page class="constrain q-pa-md">
      <div class=" row q-col-gutter-lg">
-      <div class="col-3">
+      <div class="col-3" v-if="!$q.screen.lt.sm">
         <SideBar />
       </div>
       <div v-if="!load" class="col-6  q-mx-auto">
@@ -30,7 +30,7 @@
           </q-card>
         </div>
       </div>
-      <div v-else class="col-6 q-mx-auto">
+      <div v-else class="col-12 col-sm-6">
         <Post v-for="post in posts" :key="post._id" :post="post" />
 
         <!-- loaing indicatior for more posts  -->
@@ -50,7 +50,7 @@
         <div class="bottom-spacer"></div>
 
       </div>
-      <div class="col-3">
+      <div class="col-3" v-if="!$q.screen.lt.sm">
         <Rightbar />
       </div> 
     </div>

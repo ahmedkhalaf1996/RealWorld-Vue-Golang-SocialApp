@@ -199,6 +199,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/comments/{postId}/comments/{commentId}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a comment by comment id .. auth",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Posts"
+                ],
+                "summary": "Delete  a comment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Post Id",
+                        "name": "postId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "commnet Id",
+                        "name": "commentId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/notification/mark-notification-asreaded": {
             "get": {
                 "description": "MarkNotAsReaded",
@@ -814,6 +866,12 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "page number",
+                        "name": "page",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -962,6 +1020,29 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "models.CommentWithUser": {
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "type": "string"
+                },
+                "craetedAt": {
+                    "type": "string"
+                },
+                "postId": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.UserModel"
+                },
+                "userId": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
         "models.ComnmentPost": {
             "type": "object",
             "required": [
@@ -1046,7 +1127,7 @@ const docTemplate = `{
                 "comments": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/models.CommentWithUser"
                     }
                 },
                 "createdAt": {
@@ -1064,14 +1145,14 @@ const docTemplate = `{
                 "message": {
                     "type": "string"
                 },
-                "name": {
-                    "type": "string"
-                },
                 "selectedFile": {
                     "type": "string"
                 },
                 "title": {
                     "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.UserModel"
                 }
             }
         },

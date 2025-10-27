@@ -8,8 +8,8 @@
                 <div v-for="notify in NotifyList" :key="notify._id">
                     <q-item clickable @click="MoveToThePath(notify)" :class="{'text-red': !notify.isreded}" >
                         <q-item-section top avatar>
-                            <q-avatar v-if="notify?.user?.avatart">
-                                <img :src="notify?.user?.avatart">
+                            <q-avatar v-if="notify?.user?.imageUrl">
+                                <img :src="notify?.user?.imageUrl">
                             </q-avatar>
                             <q-avatar v-else>
                                 <img src="https://cdn-icons-png.flaticon.com/512/3237/3237472.png">
@@ -48,12 +48,10 @@ export default {
     },
     watch: {
         "RealTimeNotify.notifyidData": async function (notify) {
-            console.log("noty", notify)     
-            notify.deatils = notify.details;
-            notify.user.avatart = notify.user.avatar
-            delete notify.user.avatar
-
+           if(notify.deatils){
             this.NotifyList.unshift(notify);       
+           }
+
         }
     },
     async mounted(){

@@ -1,5 +1,20 @@
 basePath: /
 definitions:
+  models.CommentWithUser:
+    properties:
+      _id:
+        type: string
+      craetedAt:
+        type: string
+      postId:
+        type: string
+      user:
+        $ref: '#/definitions/models.UserModel'
+      userId:
+        type: string
+      value:
+        type: string
+    type: object
   models.ComnmentPost:
     properties:
       value:
@@ -55,7 +70,7 @@ definitions:
         type: string
       comments:
         items:
-          type: string
+          $ref: '#/definitions/models.CommentWithUser'
         type: array
       createdAt:
         type: string
@@ -67,12 +82,12 @@ definitions:
         type: array
       message:
         type: string
-      name:
-        type: string
       selectedFile:
         type: string
       title:
         type: string
+      user:
+        $ref: '#/definitions/models.UserModel'
     type: object
   models.SendMessageM:
     properties:
@@ -256,6 +271,40 @@ paths:
       summary: send message to friend user
       tags:
       - Chat
+  /comments/{postId}/comments/{commentId}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a comment by comment id .. auth
+      parameters:
+      - description: Post Id
+        in: path
+        name: postId
+        required: true
+        type: string
+      - description: commnet Id
+        in: path
+        name: commentId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete  a comment
+      tags:
+      - Posts
   /notification/{userid}:
     get:
       consumes:
@@ -682,6 +731,10 @@ paths:
         name: id
         required: true
         type: string
+      - description: page number
+        in: query
+        name: page
+        type: integer
       produces:
       - application/json
       responses:

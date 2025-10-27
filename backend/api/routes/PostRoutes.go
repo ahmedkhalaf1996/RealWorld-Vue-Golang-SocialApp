@@ -29,4 +29,7 @@ func SetupPostRoutes(app *fiber.App) {
 
 	// delete
 	app.Delete("/posts/:id", middleware.AuthMiddleware, controllers.DeletePost)
+
+	// delete comment
+	app.Delete("/comments/:postId/comments/:commentId", middleware.AuthMiddleware, controllers.DeleteComment)
 }
