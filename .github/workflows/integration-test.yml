@@ -18,6 +18,15 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      redis:
+        image: redis:7.0-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5      
 
     steps:
       - uses: actions/checkout@v4
@@ -37,17 +46,26 @@ jobs:
           done 
           echo "MongoDB is Ready!"
 
+      - name: Wait For Redis To be ready
+        run: |
+          until nc -z localhost 6379; do 
+            echo "Waiting For Redis..."
+            sleep 2 
+          done 
+          echo "Redis is Ready!"
       # Start backend api in background 
       - name: Start Backend API 
         run : |
          echo "Starting backend server.."
-         go run main.go &
+         go run ./cmd  &
          echo &! > backend.pid 
          sleep 10 
          echo "backend process started with PIN : $(cat backend.pid)"
         working-directory: ./backend/api 
         env:
           MONGODB_URI: mongodb://localhost:27017 
+          REDIS_URL: localhost:6379
+          REDIS_PASSWORD: ""
           PORT: 5000 
         
       # wait for backend to be ready
