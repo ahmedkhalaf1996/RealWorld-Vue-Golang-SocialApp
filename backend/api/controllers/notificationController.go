@@ -24,7 +24,7 @@ type NotificationResponse struct {
 
 type UserData struct {
 	Name     string `json:"name"`
-	ImageUrl string `json:"iamgeUrl"`
+	ImageUrl string `json:"imageUrl"`
 }
 
 // helper for pupulte user data

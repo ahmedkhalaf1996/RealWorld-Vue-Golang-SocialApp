@@ -43,6 +43,7 @@ const Posts = {
                 if (userId){
                     const {data}  = await api.fetchPosts(page, userId);
                     context.commit('Posts', data)
+                    console.log("Check Posts Caching", data)
                     return data;
                 }
             } catch (error) {
@@ -93,8 +94,25 @@ const Posts = {
             console.log('data', data)
         },
         async commentPost(context, form) {
+            try {
             const { data } = await api.comment(form.Value, form.id)
-            context.commit('Post', data);
+            const postData = data.post || data;
+            context.commit('Post', postData);
+            return postData
+
+            } catch (error) {
+                console.log(error)
+                throw error;
+            }
+        
+        },
+        async deleteComment(context, {postId, commentId}){
+            try {
+                const {data} = await api.deleteComment(postId, commentId);
+                return data;
+            } catch (error) {
+                console.error('Store delte comment error:', error)
+            }
         },
         async deltePost(context, id){
             await api.deltePost(id);

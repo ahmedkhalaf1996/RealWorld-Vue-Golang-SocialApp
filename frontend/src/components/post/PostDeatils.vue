@@ -2,11 +2,14 @@
     <q-page class="constrain q-pa-md">
         <div class="row q-col-gutter-lg">
             <div class="col-3"></div>
-            <div class="col-6" v-if="post ">
+            <div class="col-12 col-sm-6" v-if="post ">
                 <div class="q-pa-md q-gutter-sm" v-if="!EditPost" >
                     <q-btn v-if="IsSameUser" color="primary" icon="eva-edit" @click="EditPost = !EditPost" label="Edit Post" />
                 </div>
-                <Post :post="post" :EditPost="EditPost" @changeEdit="EditPost = !EditPost" />
+                <Post :post="post"
+                 :EditPost="EditPost"
+                  @changeEdit="EditPost = !EditPost"
+                  @postUpdated="handlePostUpdate" />
             </div>
             <div class="col-3"></div>
         </div>
@@ -28,6 +31,9 @@ export default {
     },
     methods:{
         ...mapActions(['getPost']),
+        handlePostUpdate(updatedPost) {
+            this.post = updatedPost
+        }
     },
     async mounted(){
         const {post} = await this.getPost(this.$route.params.id)

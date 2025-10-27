@@ -30,7 +30,7 @@
           </q-card>
         </div>
       </div>
-      <div v-else class="col-6 q-mx-auto">
+      <div v-else class="col-12 col-sm-6">
         <Post v-for="post in posts" :key="post._id" :post="post" />
 
         <!-- loaing indicatior for more posts  -->

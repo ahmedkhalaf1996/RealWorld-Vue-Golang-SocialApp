@@ -3,8 +3,11 @@ package controllers
 import (
 	"Server/database"
 	"Server/models"
-	"Server/servergrpc"
+	"Server/services"
 	"context"
+	"encoding/json"
+	"fmt"
+	"log"
 	"math"
 	"slices"
 	"sort"
@@ -40,6 +43,25 @@ func GetUserByID(c *fiber.Ctx) error {
 	objId, _ := primitive.ObjectIDFromHex(c.Params("id"))
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 
+	// Create Cache key for user profile & psots
+	cacheKey := fmt.Sprintf("user:profile:%s:page:%d", c.Params("id"), page)
+	// try to get form cache first .. from redis
+	cachedData, err := database.RedisClient.Get(ctx, cacheKey).Result()
+	if err == nil {
+		var cachedRes models.CachedGetUserResponse
+		if err := json.Unmarshal([]byte(cachedData), &cachedRes); err == nil {
+			return c.Status(fiber.StatusOK).JSON(fiber.Map{
+				"user":          cachedRes.User,
+				"posts":         cachedRes.Posts,
+				"currentPage":   cachedRes.CurrentPage,
+				"numberOfPages": cachedRes.NumberOfPages,
+				"cached":        true,
+			})
+		}
+	} else {
+		log.Printf("Cache miss for user profile %s: %s", c.Params("id"), err)
+	}
+
 	var LIMIT = 3
 
 	userResult := UserSchema.FindOne(ctx, bson.M{"_id": objId})
@@ -69,6 +91,13 @@ func GetUserByID(c *fiber.Ctx) error {
 		{"$skip": int64((page - 1) * LIMIT)},
 		{"$limit": int64(LIMIT)},
 		{"$lookup": bson.M{
+			"from":         "users",
+			"localField":   "creator",
+			"foreignField": "_id",
+			"as":           "user",
+		}},
+		{"$unwind": "$user"},
+		{"$lookup": bson.M{
 			"from": "comments",
 			"let":  bson.M{"postId": "$_id"},
 			"pipeline": []bson.M{
@@ -89,15 +118,17 @@ func GetUserByID(c *fiber.Ctx) error {
 			"as": "comments",
 		}},
 		{"$project": bson.M{
-			"_id":          1,
-			"creator":      1,
-			"title":        1,
-			"message":      1,
-			"name":         1,
-			"selectedFile": 1,
-			"likes":        1,
-			"createdAt":    1,
-			"comments":     1,
+			"_id":           1,
+			"creator":       1,
+			"title":         1,
+			"message":       1,
+			"name":          1,
+			"selectedFile":  1,
+			"likes":         1,
+			"createdAt":     1,
+			"comments":      1,
+			"user.name":     1,
+			"user.imageUrl": 1,
 		}},
 	}
 
@@ -118,6 +149,22 @@ func GetUserByID(c *fiber.Ctx) error {
 
 	if posts == nil {
 		posts = make([]bson.M, 0)
+	}
+
+	// Prepare response for caching
+
+	response := models.CachedGetUserResponse{
+		User:          user,
+		Posts:         posts,
+		CurrentPage:   page,
+		NumberOfPages: math.Ceil(float64(total) / float64(LIMIT)),
+	}
+
+	responseJSON, err := json.Marshal(response)
+	if err == nil {
+		database.RedisClient.Set(ctx, cacheKey, responseJSON, 10*time.Second)
+	} else {
+		log.Printf("Fiald to marshal response for caching :%s ", err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -262,7 +309,7 @@ func FollowingUser(c *fiber.Ctx) error {
 		// set the id fiald of the notficato object
 		notification.ID = res.InsertedID.(primitive.ObjectID)
 		// call grpc
-		servergrpc.SendNotification(notification)
+		services.SendNotification(notification)
 	}
 
 	updateFirst := bson.M{"followers": FirstUser.Followers}

@@ -13,14 +13,21 @@
 
         <!-- follow un follow -->
          <q-btn v-if="!isSameUser && !isUserFollowing"
-            @click="FollowOrUnFollow" flat style="color: #FF0080" label="Follow"/>
+            @click="FollowOrUnFollow" 
+            flat
+            :loading="followLoading"
+            :disable="followLoading"
+            style="color: #FF0080" label="Follow"/>
 
          <q-btn v-if="!isSameUser && isUserFollowing"
-            @click="FollowOrUnFollow" flat class="primary" label="UN Follow"/>
+            @click="FollowOrUnFollow" flat
+                       :loading="followLoading"
+            :disable="followLoading"
+            class="primary" label="UN Follow"/>
     </div>
     <q-separator inset />
     <div class="text-subtitle1 q-pa-lg" style="margin: auto;">
-        {{ userData.bio }}
+        {{ userData?.bio }}
         <div>
             <i>{{ userPosts.length }} Posts</i>
             <i>
@@ -42,39 +49,90 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
  export default {
     props:['userData','userPosts', 'isSameUser'],
     data(){
-        return {isUserFollowing:false}
+        return {isUserFollowing:false, 
+            followLoading:false
+        }
     }, 
+    watch:{
+        userData:{
+            handler(newUserData){
+                if(newUserData && !this.isSameUser){
+                    this.checkUserFollowing();
+                }
+            },
+            immediate:true
+        },
+        isSameUser:{
+            handler(newValue){
+                if(newValue){
+                    this.isUserFollowing = false
+                }
+            },
+            immediate: true
+        }
+    },
+    computed:{
+        ...mapGetters(['GetUserData'])
+    },
     methods:{
-        ...mapActions(['FollowUser', 'GetUserByID']),
+        ...mapActions(['FollowUser']),
         async checkUserFollowing(){
-            const logeuid = JSON.parse(localStorage.getItem('profile'))?.result?._id
-            // const id = this.userData?._id 
-
-            const { user } = await this.GetUserByID(this.$route.params.id)
-
-            if(user && user?.followers.find((id) => id == logeuid)){
-                this.isUserFollowing = true 
-            } else {
-                this.isUserFollowing = false 
+            if(!this.userData || this.isSameUser){
+                this.isUserFollowing = false;
+                return;
             }
-            console.log("isUserFollo", this.isUserFollowing, "isSameUser", this.isSameUser)
+
+            const logeuid = this.GetUserData()?.result?._id
+
+            if(!logeuid){
+                this.isUserFollowing = false;
+                return;
+            }
+
+            const followers = this.userData.followers || [];
+            this.isUserFollowing = followers.some(followerId =>
+                String(followerId) === String(logeuid)
+            )
 
         },
         async FollowOrUnFollow(){
-            console.log("follow or un Follow user")
-            let data = await this.FollowUser(this.userData._id)
-            console.log("data show profile follow", data)
-            if(data && data.FirstUser){
+            if(this.isSameUser || this.followLoading || !this.userData?._id){
+                return
+            }
 
-                this.$emit('update-user', {
-                    data: data?.FirstUser
-                })
-                // change buttom
-                this.checkUserFollowing()
+            try {
+
+                this.followLoading = true;
+
+                let data = await this.FollowUser(this.userData._id)
+                if(data){
+                    if(data.FirstUser){
+                        this.$emit('update-user', {
+                            data: data.FirstUser
+                        })
+                    }
+
+                    this.isUserFollowing = !this.isUserFollowing;
+
+                    this.$q.notify({
+                        type:'positive',
+                        message:this.isUserFollowing ? 'Now Following' : 'Unfollowed',
+                        timeout: 1500
+                    })
+                }
+            } catch (error) {
+                console.error('Follwing error', error)
+                 this.$q.notify({
+                        type:'negative',
+                        message:'Faild to update follow status',
+                        timeout: 1500
+                    })
+            } finally {
+                this.followLoading = false;
             }
         },
         Edit(){
@@ -82,7 +140,9 @@ import { mapActions } from 'vuex';
         },
     },
     mounted(){
-        this.checkUserFollowing()
+        if(this.userData && !this.isSameUser){
+                    this.checkUserFollowing()
+        }
     }
  }
 </script>

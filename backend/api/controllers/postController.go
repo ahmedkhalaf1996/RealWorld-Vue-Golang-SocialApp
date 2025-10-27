@@ -3,8 +3,11 @@ package controllers
 import (
 	"Server/database"
 	"Server/models"
-	"Server/servergrpc"
+	"Server/services"
 	"context"
+	"encoding/json"
+	"fmt"
+	"log"
 	"math"
 	"slices"
 	"sort"
@@ -140,21 +143,90 @@ func CraetePost(c *fiber.Ctx) error {
 // @Failure 400 {object} map[string]interface{}
 // @Router /posts/{id} [get]
 func GetPost(c *fiber.Ctx) error {
-	id := c.Params("id")
-	if id == "" {
+	postSchema := database.DB.Collection("posts")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	postId := c.Params("id")
+	if postId == "" {
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
 			"error": "post id is required",
 		})
 	}
 
-	objID, err := primitive.ObjectIDFromHex(id)
+	objID, err := primitive.ObjectIDFromHex(postId)
 	if err != nil {
 		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
 
-	return getPostWithComments(c, objID)
+	var post bson.M
+
+	pipeline := []bson.M{
+		{"$match": bson.M{"_id": objID}},
+		{
+			"$lookup": bson.M{
+				"from":         "users",
+				"localField":   "creator",
+				"foreignField": "_id",
+				"as":           "user",
+			}},
+		{"$unwind": "$user"},
+		{"$lookup": bson.M{
+			"from": "comments",
+			"let":  bson.M{"postId": "$_id"},
+			"pipeline": []bson.M{
+				{"$match": bson.M{"$expr": bson.M{"$eq": []interface{}{"$postId", "$$postId"}}}},
+				{"$sort": bson.M{"createdAt": -1}},
+				{"$lookup": bson.M{
+					"from": "users",
+					"let":  bson.M{"uid": "$userId"},
+					"pipeline": []bson.M{
+						{"$match": bson.M{"$expr": bson.M{"$eq": []interface{}{"$_id", "$$uid"}}}},
+						{"$project": bson.M{"name": 1, "imageUrl": 1}},
+					},
+					"as": "user",
+				}},
+				{"$unwind": bson.M{"path": "$user", "preserveNullAndEmptyArrays": true}},
+				{"$project": bson.M{"_id": 1, "value": 1, "createdAt": 1, "userId": 1, "user": 1}},
+			},
+			"as": "comments",
+		}},
+		{"$project": bson.M{
+			"_id":           1,
+			"creator":       1,
+			"title":         1,
+			"message":       1,
+			"name":          1,
+			"selectedFile":  1,
+			"likes":         1,
+			"createdAt":     1,
+			"comments":      1,
+			"user.name":     1,
+			"user.imageUrl": 1,
+		}},
+	}
+	// pipeline end
+	cursor, err := postSchema.Aggregate(ctx, pipeline)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "aggregation fiald", "details": err.Error()})
+	}
+	defer cursor.Close(ctx)
+
+	if cursor.Next(ctx) {
+		if err := cursor.Decode(&post); err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "faild to decode post",
+			})
+		}
+	} else {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Post not found",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"post": post})
+
 }
 
 // Update Post
@@ -242,6 +314,25 @@ func GetAllPosts(c *fiber.Ctx) error {
 	userid := c.Query("id")
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 
+	// create Cache Key
+	cacheKey := fmt.Sprintf("Posts:user:%s:Page:%d", userid, page)
+
+	cachedData, err := database.RedisClient.Get(ctx, cacheKey).Result()
+	if err == nil {
+		// cahe hit
+		var cachedres models.CachedGetAllPostResponse
+		if err := json.Unmarshal([]byte(cachedData), &cachedres); err == nil {
+			return c.Status(fiber.StatusOK).JSON(fiber.Map{
+				"data":          cachedres.Data,
+				"currentPage":   cachedres.CurrentPage,
+				"numberOfPages": cachedres.NumberOfPages,
+				"Cached":        true,
+			})
+		}
+	} else {
+		log.Printf("Error Cahecd Data %s", err)
+	}
+
 	// get user follwoing list ides and add our user id to it
 	MainUserid, _ := primitive.ObjectIDFromHex(userid)
 	userSchema.FindOne(ctx, bson.M{"_id": MainUserid}).Decode(&user)
@@ -325,10 +416,24 @@ func GetAllPosts(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Faild to decode posts", "details": err.Error()})
 	}
 
+	// Prepear Cach Res
+	response := models.CachedGetAllPostResponse{
+		Data:          posts,
+		CurrentPage:   page,
+		NumberOfPages: math.Ceil(float64(total) / float64(LIMIT)),
+	}
+
+	// cache the res for 10 s
+	responseJSON, err := json.Marshal(response)
+	if err == nil {
+		database.RedisClient.Set(ctx, cacheKey, responseJSON, 10*time.Second)
+	}
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"data":          posts,
 		"currentPage":   page,
 		"numberOfPages": math.Ceil(float64(total) / float64(LIMIT)),
+		"Cached":        false,
 	})
 
 }
@@ -514,7 +619,7 @@ func CommentPost(c *fiber.Ctx) error {
 		// set the id fiald of the notficato object
 		notification.ID = res.InsertedID.(primitive.ObjectID)
 		// call grpc
-		servergrpc.SendNotification(notification)
+		services.SendNotification(notification)
 	}
 
 	return getPostWithComments(c, postid)
@@ -663,7 +768,7 @@ func LikePost(c *fiber.Ctx) error {
 		// set the id fiald of the notficato object
 		notification.ID = res.InsertedID.(primitive.ObjectID)
 		// call grpc
-		servergrpc.SendNotification(notification)
+		services.SendNotification(notification)
 		// End create notfication
 	}
 
