@@ -49,7 +49,7 @@ import { mapActions } from 'vuex';
         }
     },
     methods:{
-        ...mapActions(['UpdateUserData']),
+        ...mapActions(['UpdateUserData','RefreshUserData']),
         ConvertToBase64(){
             var reader = []
             reader = new FileReader();
@@ -67,6 +67,7 @@ import { mapActions } from 'vuex';
             const update = await this.UpdateUserData(userdata)
 
             if(update && update.data){
+                this.RefreshUserData()
 
                 this.$emit('update-user', {
                     data: update?.data

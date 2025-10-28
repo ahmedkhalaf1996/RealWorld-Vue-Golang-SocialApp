@@ -5,11 +5,13 @@ import (
 	"Server/models"
 	"context"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -136,4 +138,77 @@ func Login(c *fiber.Ctx) error {
 		"result": user,
 		"token":  token,
 	})
+}
+
+// Refresh Userdata
+// @Summary refresh user data and token
+// @Description  refresh user data and return issue a new token
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Router /user/refresh [get]
+func RefreshUser(c *fiber.Ctx) error {
+	var UserSchema = database.DB.Collection("users")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Missing Authorizaiton header",
+		})
+	}
+
+	tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+	jwtSecret := os.Getenv("JWT_SECRET")
+
+	token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(t *jwt.Token) (interface{}, error) {
+		return []byte(jwtSecret), nil
+	})
+
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "invalid or expired token",
+		})
+	}
+
+	claims, ok := token.Claims.(*jwt.StandardClaims)
+
+	if !ok || !token.Valid {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "unauthenticated",
+		})
+	}
+
+	userID, err := primitive.ObjectIDFromHex(claims.Issuer)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid user Id in token",
+		})
+	}
+
+	var user models.UserModel
+	err = UserSchema.FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "user not found",
+		})
+	}
+
+	// c new claims
+	// create the token
+	newclaims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		Issuer:    user.ID.Hex(),
+		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
+	})
+
+	newToken, _ := newclaims.SignedString([]byte(jwtSecret))
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"result": user,
+		"token":  newToken,
+	})
+
 }

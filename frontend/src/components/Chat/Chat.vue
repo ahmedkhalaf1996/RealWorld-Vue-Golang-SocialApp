@@ -48,7 +48,7 @@
                     <div v-for="msg in messageBetweenUsers" :key="msg._id" style="width: 100%;">
                         <q-chat-message
                             :name="msg.sender === MainUserData._id ? MainUserData.name : selectedUser.name"
-                            :avatar="msg.sender === MainUserData._id ? MainUserData.imageUrl : selectedUser.imageUrl"
+                            :avatar="getAvatar(msg)"
                             :text="[msg.content]"
                             :sent="msg.sender === MainUserData._id ? true : false"
                             />
@@ -122,6 +122,7 @@ export default {
         }
     },
     async mounted(){
+        this.RefreshUserData();
         this.MainUserData = this.GetUserData().result;
         this.GetUsList();
 
@@ -135,8 +136,15 @@ export default {
             'GetChatMsgsBetweenTwoUsers',
             'SendMessage',
             'MarkMsgsAsReaded',
-            'SendPrivateMessage'
+            'SendPrivateMessage',
+            'RefreshUserData'
         ]),
+        getAvatar(msg){
+            const user = msg.sender === this.MainUserData._id ? this.MainUserData : this.selectedUser
+            const avatar = Array.isArray(user.imageUrl) ? user.imageUrl[0]: user.imageUrl
+
+            return avatar && avatar.trim() !== '' ? avatar : 'https://cdn-icons-png.flaticon.com/512/3237/3237472.png'
+        },
         updateOnlineList(){
             this.contacts.forEach((contact)=> {
                 if(this.uniqueOnlineUsers.includes(contact._id)) {
