@@ -14,9 +14,11 @@ const Users = {
             return state.User
         },
         GetUserFollowersFollowing: async () => {
-            const userd = JSON.parse(localStorage.getItem('profile'));
-            var followers = userd.result.followers || [];
-            var following = userd.result.following || [];
+            const id = JSON.parse(localStorage.getItem('profile'))?.result._id;
+            const {data } = await api.fetchUserProfile(id);
+
+            var followers = data.user.followers || [];
+            var following = data.user.following || [];
             
             const combinedArray = [...followers, ...following];
             const uniqueArray = Array.from(new Set(combinedArray));

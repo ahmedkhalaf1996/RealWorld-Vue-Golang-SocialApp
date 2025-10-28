@@ -34,6 +34,11 @@ const Auth = {
     }
   },
   actions: {
+        async RefreshUserData(context){
+        const {data } = await api.refreshUserNow();
+        context.commit('Auth', data)
+        context.commit('SetData')
+    },
     async signin (context, formData) {
         try {
             const { data } = await api.signIn(formData)

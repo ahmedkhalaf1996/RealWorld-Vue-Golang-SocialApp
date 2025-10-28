@@ -312,7 +312,7 @@ export default {
         this.connectToNotify()
         this.createChatConnection()
 
-        //    this.$router.push('/')
+           this.$router.push('/')
           }
         }
         this.isLoading = false;

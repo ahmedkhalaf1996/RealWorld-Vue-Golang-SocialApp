@@ -16,7 +16,7 @@ export const fetchUserProfile = (id, page= 1) => API.get(`/user/getUser/${id}?pa
 export const getSugUser = (id) => API.get(`/user/getSug?id=${id}`);
 export const UpdateUser = (userData) => API.patch(`user/Update/${userData._id}`, userData);
 export const following = (id) => API.patch(`/user/${id}/following`);
-
+export const refreshUserNow = () => API.get(`/user/refresh`);
 
 // posts methods
 
