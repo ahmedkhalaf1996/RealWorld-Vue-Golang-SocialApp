@@ -58,7 +58,7 @@ jobs:
         run : |
          echo "Starting backend server.."
          go run ./cmd  &
-         echo &! > backend.pid 
+         echo $! > backend.pid
          sleep 10 
          echo "backend process started with PIN : $(cat backend.pid)"
         working-directory: ./backend/api 
