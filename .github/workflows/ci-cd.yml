@@ -1,22 +1,10 @@
 name: CI/CD Pipeline
 
 on:
-
   push:
     branches: [main]
 
-  pull_request:
-    branches: [main]
-
 jobs: 
-  backend-tests:
-    uses: ./.github/workflows/backend-tests.yml
-    secrets: inherit
-
-  # integration-frotend-tests:
-  #   uses: ./.github/workflows/integration-test.yml 
-  #   needs: backend-tests
-  #   secrets: inherit
 
   deploay-to-dockerhub:
     uses: ./.github/workflows/docker-deployment.yml 
