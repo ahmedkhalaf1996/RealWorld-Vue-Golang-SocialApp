@@ -2,7 +2,8 @@
 /backend/api/tmp
 
 /frontend/node_modules
-
+digital
+digital.pub
 # .DS_Store
 # node_modules
 # /dist
