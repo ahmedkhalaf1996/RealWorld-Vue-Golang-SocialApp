@@ -1,11 +1,11 @@
-name: Frontend Integration E2E Testing 
+name: Frotend Integration E2E Testing 
 
 on: 
   workflow_call:
 
 jobs:
   integration-tests:
-    name: Frontend Integration Tests (with Backend)
+    name: Frontned Integration Tests (with Backend)
     runs-on: ubuntu-latest
 
     services:
@@ -37,7 +37,8 @@ jobs:
       - name: Setup Frontend Environment
         uses: ./.github/actions/setup-frontend     
 
-      - name: Wait For MongoDB To be ready
+
+      - name: Wait For MongoDb To be ready
         run: |
           until nc -z localhost 27017; do 
             echo "Waiting For MongoDB..."
@@ -52,15 +53,14 @@ jobs:
             sleep 2 
           done 
           echo "Redis is Ready!"
-      
       # Start backend api in background 
       - name: Start Backend API 
-        run: |
-          echo "Starting backend server.."
-          go run ./cmd &
-          echo $! > backend.pid
-          sleep 10 
-          echo "Backend process started with PID: $(cat backend.pid)"
+        run : |
+         echo "Starting backend server.."
+         go run ./cmd  &
+         echo &! > backend.pid 
+         sleep 10 
+         echo "backend process started with PIN : $(cat backend.pid)"
         working-directory: ./backend/api 
         env:
           MONGODB_URI: mongodb://localhost:27017 
@@ -68,58 +68,48 @@ jobs:
           REDIS_PASSWORD: ""
           PORT: 5000 
         
-      # Wait for backend to be ready
-      - name: Wait For backend API 
+      # wait for backend to be ready
+      - name : Wait For backend API 
         run: |
           echo "Waiting for backend on port 5000.."
           timeout 60 bash -c 'until nc -z localhost 5000; do echo "Waiting for backend..."; sleep 2; done'
-          echo "Backend port is open, testing http response..."
-          timeout 30 bash -c 'until curl -f http://localhost:5000 2>/dev/null; do echo "Waiting for http response.."; sleep 2; done'
-          echo "Backend API is ready!"
+          echo "backend port is open , for  testing http response..."
+          timeout 30 bash -c 'until curl -f http://localhost:5000 2>/dev/null; do echo "Waiting for http respose .."; sleep 2; done'
+          echo " backend  api is ready!"
 
-      # Start Frontend in background (using port 8080 instead of 80 to avoid sudo issues)
-      - name: Start Frontend in background
+      # Start Frontend In background 
+      - name: Start Fronend in background
         run: |
-          echo "Starting Frontend application on port 8080.."
-          nohup npm run serve -- --port 8080 > frontend.log 2>&1 &
+          echo "Starting Frontend appication on port 80.."
+          sudo nohup npm run serve > frotend.log 2>&1 &
           echo $! > frontend.pid 
           sleep 15
-          echo "Frontend process started with PID: $(cat frontend.pid)"
-          if pgrep -f "vue-cli-service serve" > /dev/null; then 
-            echo "Vue CLI service is running"
+          echo "frontend process started"
+          if pgrep -f "vue-cli-services serve" > /dev/null; then 
+            echo "Vue clid services is running"
           else 
-            echo "Vue CLI service not found, checking logs:"
-            cat frontend.log || echo "No log file found"
-            exit 1
+            echo "vue cli service not found, checking logs:"
+            sudo cat frontend.log || echo "No log file found"
           fi 
         working-directory: ./frontend 
         env:
           VUE_APP_API_URL: http://localhost:5000 
         
-      # Wait for frontend to be ready
-      - name: Wait For frontend application 
+      # wait for frontend to be ready
+      - name : Wait For frontend application 
         run: |
-          echo "Waiting for frontend on port 8080.."
-          timeout 60 bash -c 'until nc -z localhost 8080; do echo "Waiting for frontend..."; sleep 2; done'
-          echo "Frontend port is open, testing http response..."
-          timeout 30 bash -c 'until curl -f http://localhost:8080 2>/dev/null; do echo "Waiting for http response.."; sleep 2; done'
-          echo "Frontend application is ready!"  
+          echo "Waiting for frontend on port 80.."
+          timeout 60 bash -c 'until nc -z localhost 80; do echo "Waiting for backend..."; sleep 2; done'
+          echo "backend port is open , for  testing http response..."
+          timeout 30 bash -c 'until curl -f http://localhost:80 2>/dev/null; do echo "Waiting for http respose .."; sleep 2; done'
+          echo "frontend application is ready!"  
         working-directory: ./frontend   
-
-      - name: Show Frontend Logs (if wait fails)
-        if: failure()
-        run: |
-          echo "=== Frontend Logs ==="
-          cat frontend.log || echo "No frontend log file found"
-          echo "=== Process Status ==="
-          ps aux | grep -E 'vue-cli-service|node' || echo "No relevant processes found"
-        working-directory: ./frontend
 
       - name: Run Cypress Integration Tests 
         run: npm run cy:run:auth 
         working-directory: ./frontend 
         env:
-          CYPRESS_BASE_URL: http://localhost:8080
+          CYPRESS_BASE_URL: http://localhost:80
           CYPRESS_API_URL: http://localhost:5000
 
       - name: Stop Applications 
@@ -128,8 +118,8 @@ jobs:
           if [ -f ./backend/api/backend.pid ]; then
             kill $(cat ./backend/api/backend.pid) || true 
           fi 
-          if [ -f ./frontend/frontend.pid ]; then
-            kill $(cat ./frontend/frontend.pid) || true 
+          if [ -f ./frontend/api/frontend.pid ]; then
+            kill $(cat ./frontend/api/frontend.pid) || true 
           fi 
           sudo lsof -ti:5000 | xargs -r sudo kill -9 || true 
-          sudo lsof -ti:8080 | xargs -r sudo kill -9 || true
+          sudo lsof -ti:80 | xargs -r sudo kill -9 || true 
