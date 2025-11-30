@@ -9,9 +9,9 @@ on:
     branches: [main]
 
 jobs: 
-  # backend-tests:
-  #   uses: ./.github/workflows/backend-tests.yml
-  #   secrets: inherit
+  backend-tests:
+    uses: ./.github/workflows/backend-tests.yml
+    secrets: inherit
 
   # integration-frotend-tests:
   #   uses: ./.github/workflows/integration-test.yml 
