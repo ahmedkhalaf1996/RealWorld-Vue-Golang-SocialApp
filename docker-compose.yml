@@ -9,13 +9,12 @@ services:
     networks:
       - app-network
     depends_on:
-      - mongodb
       - redis
     environment:
       - JWT_SECRET=o2gfVvPiOyg2YXGQtecK3MdMI6UZkWQ70XSDBQGFOAk=
       - REDIS_URL=redis:6379
       - REDIS_PASSWORD=
-      - MONGODB_URL=mongodb://admin:password@mongodb
+      - MONGODB_URL=mongodb+srv://doadmin:MV6N39lLxF2840j5@db-mongodb-nyc3-97667-bc1c89f5.mongo.ondigitalocean.com/admin?tls=true&authSource=admin
 
   VueServer:
     image: ahmedkhalaf666/vue-app-fe
@@ -29,18 +28,6 @@ services:
       - dist:/dist 
     depends_on:
       - GolangApiServer
-  mongodb:
-    container_name: mongodb
-    image: mongo:7.0 
-    ports:
-      - 27017:27017 
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=password 
-    volumes:
-     - mongo-data:/usr/data/db 
-    networks:
-      - app-network
   redis:
     container_name: redis 
     image: redis:7.0-alpine

@@ -21,11 +21,11 @@ jobs:
         docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
     
     - name: Build backend golang api 
-      run: docker build . --file backend/api/Dockerfile --tag ${{secrets.DOCKER_USER}}/$DOCKER_REPO_BACK_API:$DOCKER_TAG
+      run: docker build --no-cache --file backend/api/Dockerfile --tag ${{secrets.DOCKER_USER}}/$DOCKER_REPO_BACK_API:$DOCKER_TAG .
     - name: Push backend api image to docker hub 
       run: docker push ${{secrets.DOCKER_USER}}/$DOCKER_REPO_BACK_API:$DOCKER_TAG
 
     - name: Build frontend vue 
-      run: docker build . --file frontend/Dockerfile --tag ${{secrets.DOCKER_USER}}/$DOCKER_REPO_FRONT:$DOCKER_TAG
+      run: docker build --no-cache --file frontend/Dockerfile --tag ${{secrets.DOCKER_USER}}/$DOCKER_REPO_FRONT:$DOCKER_TAG .
     - name: Push frontend vue image to docker hub 
       run: docker push ${{secrets.DOCKER_USER}}/$DOCKER_REPO_FRONT:$DOCKER_TAG
