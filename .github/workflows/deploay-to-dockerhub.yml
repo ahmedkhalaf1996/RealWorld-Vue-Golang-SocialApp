@@ -1,0 +1,23 @@
+name: Deploy To Digital oCean
+
+on:
+  workflow_call:
+  
+jobs:
+  connect-ToServver:
+    name: Backend Go Tests 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: exctuting remote ssh commands using ssh key
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: 142.93.173.46
+          username: root 
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            docker-compose down 
+            docker rmi $(docker images -a -q)
+            docker-compose up -d 
+
+

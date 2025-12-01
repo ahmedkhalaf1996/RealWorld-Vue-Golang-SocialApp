@@ -18,3 +18,8 @@ jobs:
     uses: ./.github/workflows/docker-deployment.yml 
     # needs: integration-frotend-tests
     secrets: inherit
+
+  deploay-to-digitalOcain:
+    uses: ./.github/workflows/do-deployment.yml 
+    needs: deploay-to-dockerhub
+    secrets: inherit
