@@ -3,7 +3,7 @@
   <q-toolbar class="constrain">
     <q-btn flat to="/" class="gt-xs">
         <q-icon left size="3em" name="eva-camera-outline" />
-        <q-toolbar-title class="text grand-hotel text-bold"> New Home</q-toolbar-title>
+        <q-toolbar-title class="text grand-hotel text-bold"> Home</q-toolbar-title>
     </q-btn>
 
     <q-separator class="large-screen-only gt-xs" vertical spaced />

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve --port 80",
+    "serve1": "vue-cli-service serve --port 8080 --mode dev5001",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
     "cy:run:auth":"cypress run --spec 'cypress/e2e/auth.cy.js'"

@@ -2,6 +2,7 @@ package main
 
 import (
 	"Server/database"
+	"flag"
 
 	"log"
 
@@ -30,6 +31,8 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
+	port := flag.String("port", "5000", "Port to listen on")
+	flag.Parse()
 	// connect to mongodb database
 	database.Connect()
 
@@ -62,5 +65,8 @@ func main() {
 	// Serve swager doctionation
 	app.Get("/swagger/*", swagger.HandlerDefault)
 
-	app.Listen(":5000")
+	log.Printf("Server Starting on :%s", *port)
+	if err := app.Listen(":" + *port); err != nil {
+		log.Fatal(err)
+	}
 }
