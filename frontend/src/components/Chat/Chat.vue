@@ -98,29 +98,61 @@ export default {
         ...mapState(["RealTimeChat"])
     },
     watch: {
-        "RealTimeChat.onlineFriends": function (online) {
-            const onlineFriendsArray = Object.values(online);
-            console.log('Online friend changed new val', onlineFriendsArray)
-                this.uniqueOnlineUsers = Array.from(new Set(onlineFriendsArray));
+    "RealTimeChat.onlineFriends": {
+        handler: function (onlineFriendsArray) {
+            console.log('Online friends changed:', onlineFriendsArray);
+            if (Array.isArray(onlineFriendsArray)) {
+                this.uniqueOnlineUsers = [...new Set(onlineFriendsArray)];
                 this.updateOnlineList();
-        },
-        "RealTimeChat.privateMessages": function(message){
-            if(this.contacts.length > 0){
-                this.contacts.forEach((contact)=> {
-                    if(contact._id == message.sender) {
-                        contact.unReadedmessage++;
-                    }
-                })
-            if(this.selectedUser && this.selectedUser?._id == message.sender){
-                this.messageBetweenUsers.push(message);
-                setTimeout(() => {
-                    this.scrollDownFunction();
-                }, 100);
             }
-
+        },
+        deep: true,
+        immediate: true
+    },
+    "RealTimeChat.privateMessages": function(message){
+        if (!message || !message.sender) return;
+        
+        if (this.contacts.length > 0) {
+            this.contacts.forEach((contact) => {
+                if (contact._id == message.sender) {
+                    contact.unReadedmessage = (contact.unReadedmessage || 0) + 1;
+                }
+            });
+            
+            // If viewing conversation with sender, add message
+            if (this.selectedUser && this.selectedUser._id == message.sender) {
+                this.messageBetweenUsers.push(message);
+                this.$nextTick(() => {
+                    this.scrollDownFunction();
+                });
             }
         }
-    },
+    }
+},
+    // watch: {
+    //     "RealTimeChat.onlineFriends": function (online) {
+    //         const onlineFriendsArray = Object.values(online);
+    //         console.log('Online friend changed new val', onlineFriendsArray)
+    //             this.uniqueOnlineUsers = Array.from(new Set(onlineFriendsArray));
+    //             this.updateOnlineList();
+    //     },
+    //     "RealTimeChat.privateMessages": function(message){
+    //         if(this.contacts.length > 0){
+    //             this.contacts.forEach((contact)=> {
+    //                 if(contact._id == message.sender) {
+    //                     contact.unReadedmessage++;
+    //                 }
+    //             })
+    //         if(this.selectedUser && this.selectedUser?._id == message.sender){
+    //             this.messageBetweenUsers.push(message);
+    //             setTimeout(() => {
+    //                 this.scrollDownFunction();
+    //             }, 100);
+    //         }
+
+    //         }
+    //     }
+    // },
     async mounted(){
         this.RefreshUserData();
         this.MainUserData = this.GetUserData().result;
@@ -238,33 +270,55 @@ export default {
             }, 100);
 
         },
-        Sendmessage(){
-            var content = this.messaageToSend.text;
-            var sender = this.MainUserData._id;
-            var recever = this.selectedUser._id;
+      Sendmessage() {
+    if (!this.messaageToSend.text.trim()) {
+        return;
+    }
+    
+    var content = this.messaageToSend.text;
+    var sender = this.MainUserData._id;
+    var recever = this.selectedUser._id;
 
-            var sdata = {content, sender, recever};
-            if(!this.uniqueOnlineUsers.includes(recever)) {
-                
-                var sucess = this.SendMessage(sdata);
-                if (sucess){
-                    this.messageBetweenUsers.push(sdata);
-                    setTimeout(() => {
-                        this.scrollDownFunction();
-                    }, 100);
-                }
+    var sdata = {
+        content: content,
+        sender: sender,
+        recever: recever
+    };
+    
+    // Always send through WebSocket if connected
+    const isReceiverOnline = this.uniqueOnlineUsers.includes(recever);
+    
+    if (isReceiverOnline) {
+        console.log('Sending message via WebSocket (receiver is online)');
+        this.SendPrivateMessage(sdata).then((success) => {
+            if (success) {
+                // Message will be echoed back from server
+                console.log('Message sent successfully');
             } else {
-                this.SendPrivateMessage(sdata).then(()=> {
+                // Fallback to HTTP if WebSocket fails
+                console.log('WebSocket send failed, using HTTP fallback');
+                this.SendMessage(sdata).then(() => {
                     this.messageBetweenUsers.push(sdata);
-                });
-                setTimeout(() => {
+                    this.$nextTick(() => {
                         this.scrollDownFunction();
-                }, 100);
+                    });
+                });
             }
+        });
+    } else {
+        console.log('Sending message via HTTP (receiver is offline)');
+        this.SendMessage(sdata).then((success) => {
+            if (success) {
+                this.messageBetweenUsers.push(sdata);
+                this.$nextTick(() => {
+                    this.scrollDownFunction();
+                });
+            }
+        });
+    }
 
-
-            this.messaageToSend.text = '';
-        }
+    this.messaageToSend.text = '';
+}
  
     }
 }

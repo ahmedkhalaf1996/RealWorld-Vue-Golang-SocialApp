@@ -2,7 +2,13 @@ package main
 
 import (
 	"Server/database"
+	"Server/kafka"
+	"Server/realtime"
 	"flag"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"log"
 
@@ -28,11 +34,9 @@ import (
 func main() {
 	// load .env file
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Error loading .env file using environment variables")
 	}
 
-	port := flag.String("port", "5000", "Port to listen on")
-	flag.Parse()
 	// connect to mongodb database
 	database.Connect()
 
@@ -40,7 +44,23 @@ func main() {
 	database.InitRedis()
 	defer database.CloseRedis()
 
-	app := fiber.New()
+	// get improtant keys
+	nodeID := flag.String("node", "node-1", "Node id for this instance")
+	port := flag.String("port", "5000", "port to list on")
+	kafkaAddr := flag.String("kafka", "127.0.0.1:29092", "kafka address")
+
+	flag.Parse()
+
+	if err := kafka.WaitForKafka(*kafkaAddr, 1*time.Minute); err != nil {
+		log.Fatalf("Kafka not ready : %v", err)
+	}
+
+	time.Sleep(3 * time.Second)
+
+	app := fiber.New(fiber.Config{
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	})
 
 	app.Use(cors.New(cors.Config{
 		AllowCredentials: true,
@@ -48,13 +68,22 @@ func main() {
 			return true
 		},
 	}))
+	// initialize notfication manger with kafka
+	if err := realtime.InitNotificationManger(*kafkaAddr, *nodeID); err != nil {
+		log.Fatalf("Faild to init notification manager: %v", err)
+	}
+
+	// initilize chathub
+	chathub := SetupRealtimeChat(app, *kafkaAddr, *nodeID)
+
+	// call heartbeat
+	heatbeatMgr, err := kafka.NewHeartbeatManager(*kafkaAddr, *nodeID, chathub)
+	if err != nil {
+		log.Fatalf("Faild to crete heartbeat manager.. %v", err)
+	}
 
 	// Setup API Routes
 	SetupAPI(app)
-
-	// setup realtime chat
-	SetupRealtimeChat(app)
-
 	// Setup realtime Notificatons
 	SetupRealtimeNotifications(app)
 
@@ -65,7 +94,26 @@ func main() {
 	// Serve swager doctionation
 	app.Get("/swagger/*", swagger.HandlerDefault)
 
-	log.Printf("Server Starting on :%s", *port)
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-sigChan
+		log.Println("Shuting down gracefully..")
+
+		heatbeatMgr.Stop()
+		if chathub != nil {
+			chathub.Close()
+		}
+
+		notifMgr := realtime.GetNotificationManager()
+		if notifMgr != nil {
+			notifMgr.Close()
+		}
+
+		app.ShutdownWithTimeout(10 * time.Second)
+	}()
+	log.Printf("Server Starting on :%s (node: %s)", *port, *nodeID)
 	if err := app.Listen(":" + *port); err != nil {
 		log.Fatal(err)
 	}
