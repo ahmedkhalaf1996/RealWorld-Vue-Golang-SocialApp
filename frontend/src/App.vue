@@ -31,9 +31,9 @@ export default {
     this.connectToNotify();
     this.createChatConnection()
   },
-  beforeUnmount(){
-    this.StopConnectionToNotify();
-    this.StopConnectionToChat()
+  async beforeUnmount(){
+   await this.StopConnectionToNotify();
+   await this.StopConnectionToChat()
   },
   components:{NavBar}
 }

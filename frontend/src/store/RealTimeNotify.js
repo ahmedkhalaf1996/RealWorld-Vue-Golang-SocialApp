@@ -1,3 +1,4 @@
+
 const RealTimeNotify = {
     state: {
         ws: null,
@@ -32,7 +33,19 @@ const RealTimeNotify = {
 
                 ws.onmessage = (event) => {
                     const Notify = JSON.parse(event.data);
+                    console.log("get new notification", Notify)
                     context.commit('ADD_NOTIFICATION', Notify)
+                }
+
+                ws.onclose = (event) => {
+                    console.log("WebSocket nitifcation disconnected", event.code, event.reason)
+                    if (JSON.parse(localStorage.getItem('profile'))) {
+                            context.commit('SET_WS', ws);
+
+                            setTimeout(() => {
+                                context.commit('connectToNotify')
+                            }, 3000);
+                    }
                 }
             }
         },
