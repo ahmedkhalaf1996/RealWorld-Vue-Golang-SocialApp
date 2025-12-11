@@ -243,11 +243,15 @@
         let id = this.GetUserData()?.result?._id;
         this.$router.push(`/Profile/${id}`)
       },
-      LogUserOut(){
-        this.logout(),
-        this.StopConnectionToNotify()
-        this.StopConnectionToChat()
-        this.$router.push(`/Auth`)
+      async LogUserOut(){
+        await this.StopConnectionToNotify()
+
+        var wait = await this.StopConnectionToChat()
+        console.log(wait)
+        this.logout()
+        setTimeout(() => {
+        this.$router.push(`/Auth`)          
+        }, 1500);
       },
       GoToNotification(){
         this.$router.push('/Notification')

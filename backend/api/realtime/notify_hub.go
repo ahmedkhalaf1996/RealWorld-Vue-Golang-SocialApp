@@ -26,14 +26,24 @@ type User struct {
 type NotificationManager struct {
 	connections map[string]*websocket.Conn
 	lock        sync.RWMutex
+	kafkaMgr    *KafkaNotificationBridge
 }
 
 var notificationManager *NotificationManager
 
-func init() {
+func InitNotificationManger(kafkaAddr, nodeID string) error {
+	bridge, err := NewKafkaNotificationBridge(kafkaAddr, nodeID)
+	if err != nil {
+		return err
+	}
+
 	notificationManager = &NotificationManager{
 		connections: make(map[string]*websocket.Conn),
+		kafkaMgr:    bridge,
 	}
+
+	bridge.SetDeliveryHandler(notificationManager)
+	return nil
 }
 
 func GetNotificationManager() *NotificationManager {
@@ -44,6 +54,10 @@ func (nm *NotificationManager) AddNotificationConnection(userID string, conn *we
 	nm.lock.Lock()
 	defer nm.lock.Unlock()
 
+	// close old conn
+	if oldConn, exists := nm.connections[userID]; exists {
+		oldConn.Close()
+	}
 	nm.connections[userID] = conn
 	log.Printf("User %s connected to notitificaton server", userID)
 }
@@ -57,24 +71,26 @@ func (nm *NotificationManager) RemoveNotificationConnection(userID string) {
 }
 
 func (nm *NotificationManager) SendNotificatonToUser(userID string, notifiaton Notification) error {
+	return nm.kafkaMgr.PublishNotification(userID, notifiaton)
+}
+
+func (nm *NotificationManager) DeliverToLocalClient(userID string, notification Notification) {
 	nm.lock.RLock()
 	conn, exists := nm.connections[userID]
 	nm.lock.RUnlock()
 
 	if !exists {
-		log.Printf("User %s not connected for notification server", userID)
-		return nil
+		log.Printf("User %s not connected to this node", userID)
+		return
 	}
 
-	err := conn.WriteJSON(notifiaton)
+	err := conn.WriteJSON(notification)
 	if err != nil {
-		log.Printf("Error sending notification to user %s : %v", userID, err)
+		log.Printf("Error sending notifcation to user %s: %v", userID, err)
 		nm.RemoveNotificationConnection(userID)
-		return err
+		return
 	}
-
-	log.Printf("notification sent to user %s : %s", userID, notifiaton.Details)
-	return nil
+	log.Printf("Notification deliverd to user %s : %s", userID, notification.Details)
 }
 
 func (nm *NotificationManager) GetConnectedUsers() []string {
@@ -86,4 +102,10 @@ func (nm *NotificationManager) GetConnectedUsers() []string {
 		users = append(users, userID)
 	}
 	return users
+}
+
+func (nm *NotificationManager) Close() {
+	if nm.kafkaMgr != nil {
+		nm.kafkaMgr.Close()
+	}
 }
