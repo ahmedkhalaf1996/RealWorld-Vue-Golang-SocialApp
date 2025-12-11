@@ -85,7 +85,7 @@ func (h *ChatHub) handleIncomingWebsocketMessages(ctx context.Context, client *C
 			}
 
 			kafkaMsg := &kafka.Message{
-				FromUserID: client.UserID,
+				FromUserID: msg.Sender,
 				ToUserID:   msg.Recever,
 				Content:    msg.Content,
 				Timestamp:  time.Now().Unix(),
