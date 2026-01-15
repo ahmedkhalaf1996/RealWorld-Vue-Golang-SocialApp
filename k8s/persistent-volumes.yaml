@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-pvc
+  namespace: social-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+--- 
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: social-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+--- 
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kafka-controller-pvc
+  namespace: social-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+--- 
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kafka-1-pvc
+  namespace: social-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+--- 
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kafka-2-pvc
+  namespace: social-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

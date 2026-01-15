@@ -12,7 +12,7 @@ WORKDIR /root/
 COPY --from=builder /usr/src/app/main . 
 COPY --from=builder /usr/src/app/.env . 
 EXPOSE 5000
-CMD [ "./main" ]
+ENTRYPOINT [ "./main" ]
 
 
 

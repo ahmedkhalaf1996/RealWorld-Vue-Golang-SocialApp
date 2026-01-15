@@ -47,6 +47,7 @@ func main() {
 	// get improtant keys
 	nodeID := flag.String("node", "node-1", "Node id for this instance")
 	port := flag.String("port", "5000", "port to list on")
+	//kafkaAddr := flag.String("kafka", "127.0.0.1:29092", "kafka address")
 	kafkaAddr := flag.String("kafka", "127.0.0.1:29092", "kafka address")
 
 	flag.Parse()
@@ -93,6 +94,13 @@ func main() {
 
 	// Serve swager doctionation
 	app.Get("/swagger/*", swagger.HandlerDefault)
+
+	app.Get("/health", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"status": "healthy",
+			"node":   *nodeID,
+		})
+	})
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
