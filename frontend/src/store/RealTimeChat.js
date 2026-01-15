@@ -54,9 +54,18 @@ const RealTimeChat = {
                     context.commit('SET_WS', null);
                 }
                 
-                const uri = process.env.VUE_APP_RealTimeChatUrl
-                const ws = new WebSocket(`${uri}${context.state.userId}`)
+                // const uri = process.env.VUE_APP_RealTimeChatUrl
+                // const ws = new WebSocket(`${uri}${context.state.userId}`)
                 
+                const baseUri = process.env.VUE_APP_RealTimeChatUrl
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const host = window.location.host;
+                const wsUrl = `${protocol}//${host}${baseUri}/${context.state.userId}`  
+                
+                const ws = new WebSocket(wsUrl)
+                
+
+
                 ws.onopen = () => {
                     console.log('WebSocket connected for user:', context.state.userId);
                     context.commit('SET_WS', ws);

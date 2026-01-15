@@ -1,0 +1,127 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: social-app-ingress
+  namespace: social-app 
+  annotations: 
+    # cors 
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, PUT, POST, DELETE, PATCH, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,Keep-Alive,User-Agent,x-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+
+    # webSocket 
+    nginx.ingress.kubernetes.io/websocket-services: "backend-service"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+
+spec:
+  ingressClassName: nginx 
+  rules:
+  - http: 
+      paths: 
+      - path: /health
+        pathType: Exact
+        backend:
+          service: 
+            name: backend-service
+            port: 
+              number: 5000
+      - path: /notifications/ws 
+        pathType: Prefix 
+        backend:
+         service: 
+            name: backend-service
+            port: 
+              number: 5000
+      - path: /ws 
+        pathType: Prefix 
+        backend:
+         service: 
+            name: backend-service
+            port: 
+              number: 5000
+      #  frontend static assets 
+      - path: /js 
+        pathType: Prefix 
+        backend:
+         service: 
+            name: frontend-service
+            port: 
+              number: 80
+      - path: /css 
+        pathType: Prefix 
+        backend:
+         service: 
+            name: frontend-service
+            port: 
+              number: 80
+      - path: /img 
+        pathType: Prefix 
+        backend:
+         service: 
+            name: frontend-service
+            port: 
+              number: 80
+      - path: /fonts 
+        pathType: Prefix 
+        backend:
+         service: 
+            name: frontend-service
+            port: 
+              number: 80
+      - path: /favicon.ico 
+        pathType: Exact 
+        backend:
+         service: 
+            name: frontend-service
+            port: 
+              number: 80
+
+# backend api 
+      - path: /api  
+        pathType: Prefix 
+        backend:
+         service: 
+            name: backend-service
+            port: 
+              number: 5000
+# catch-all .. must be last thing 
+      - path: /
+        pathType: Prefix 
+        backend:
+         service: 
+            name: frontend-service
+            port: 
+              number: 80
+
+--- 
+# seaprate ingress for api rewrite 
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: social-app-api-rewrite
+  namespace: social-app 
+  annotations: 
+  # /api prefix befor sending to be
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /api(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: backend-service
+            port:
+              number: 5000
+
+
