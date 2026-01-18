@@ -9,7 +9,7 @@ API.interceptors.request.use((req) => {
     return req;
 })
 
-// user end points 
+// user end points // ok
 export const signIn = (formData) => API.post('user/signin', formData);
 export const signUp = (formData) => API.post('user/signup', formData);
 export const fetchUserProfile = (id) => API.get(`/user/getUser/${id}`);
